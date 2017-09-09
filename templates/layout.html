@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+  <head>
+    {% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css')}}">
+    <title>{% block title %}{% endblock %} - QPA</title>
+    {% endblock %}
+  </head>
+  <body>
+  	<div id="navbar"> 
+  		<ul>
+  			<li><a href={{ url_for('index') }}>HOME</a></li>
+        <li><a href={{ url_for('index') }}>PROJECTS</a></li>
+        <li><a href={{ url_for('index') }}>ARTICLES</a></li>
+        {% if session['id']%}
+          <li class="right"><a href={{ url_for('logout') }}>LOGOUT</a></li>
+        {% else %}
+          <li class="right"><a href={{ url_for('login') }}>LOGIN</a></li>
+          <li class="right"><a href={{ url_for('register') }}>REGISTER</a></li>
+        {% endif %}
+      </ul>
+  	</div>
+
+
+    </div
+    <div class=flashes>
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <ul>
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+          </ul>
+        {% endif %}
+      {% endwith %}
+    </div>
+    <div id="content">{% block content %}{% endblock %}</div>
+    <div id="footer">
+      {% block footer %}
+      {% endblock %}
+    </div>
+  </body>
+</html>
