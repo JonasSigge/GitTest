@@ -48,9 +48,6 @@ def close_db(error):
 @app.route('/')
 @require_login
 def index():
-    db = get_db()
-    cursor = db.execute("SELECT * FROM users")
-    print (cursor.fetchall())
     return render_template("index.html")
 
 @app.route('/register', methods=["GET", "POST"])
@@ -159,14 +156,56 @@ def logout():
     #sends user to login page
     return redirect(url_for('login'))
 
-@app.route('/projectlist')
-def projectlist():
+@app.route('/projects')
+def projects():
     #TODO
     return redirect(url_for('index'))
 
-@app.route('/articles')
+@app.route('/articles', methods=["GET","POST"])
+@require_login
 def articles():
-    #TODO
-    return redirect(url_for('index'))
+    db = get_db();
+    if request.method == 'POST':
+        if request.form['add']:
+            return redirect(url_for('add_article'))
+    else:
+        query = ''' SELECT name,id from articles where 
+                    user_id = :user_id LIMIT 50
+            '''
+        rows = db.execute(query, {'user_id' : session['id']})
+    return render_template('articles.html', articles = rows)
 
+@app.route('/article<article_id>', methods=["GET","POST"])
+@require_login
+def article(article_id):
+    db = get_db()
+    if request.method == 'POST':
+        pass
+    else:
+        query = 'SELECT id, name, price, hours_per_unit FROM articles WHERE (user_id = :user_id AND id = :article_id)'
+        cursor = db.execute(query,{'user_id' : session['id'],'article_id': article_id})
+    return render_template('article.html',article = cursor)
 
+@app.route('/add_article', methods=["GET","POST"])
+@require_login
+def add_article():
+    if request.method == 'POST':
+        name = request.form.get('name')
+        price = request.form.get('price')
+        hours_per_unit = request.form.get('time')
+        if not name:
+            flash("Please enter article name")
+        else:
+            db = get_db()
+            if not price:
+                price = 0
+            if not hours_per_unit:
+                hours_per_unit = 0
+            query = '''INSERT INTO articles (user_id,name,price,hours_per_unit) 
+                       VALUES (:user_id,:name,:price,:hours_per_unit)
+                    '''
+            db.execute(query,{'user_id':session["id"],'name':name,'price':price,'hours_per_unit':hours_per_unit})
+            db.commit()
+            return redirect(url_for('articles'))
+    
+    return render_template('add_article.html')
