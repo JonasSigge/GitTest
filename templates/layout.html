@@ -3,6 +3,7 @@
   <head>
     {% block head %}
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css')}}">
+    <script type="text/javascript" src="{{ url_for('static', filename='jquery.js')}}"></script>
     <title>{% block title %}{% endblock %} - QPA</title>
     {% endblock %}
   </head>
