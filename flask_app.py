@@ -171,7 +171,7 @@ def articles():
     else:
         query = ''' SELECT name,id from articles where 
                     user_id = :user_id LIMIT 50
-            '''
+                '''
         rows = db.execute(query, {'user_id' : session['id']})
     return render_template('articles.html', articles = rows)
 
@@ -179,32 +179,63 @@ def articles():
 @require_login
 def article(article_id):
     db = get_db()
+
     if request.method == 'POST':
-        pass
-    else:
-        query = 'SELECT id, name, price, hours_per_unit FROM articles WHERE (user_id = :user_id AND id = :article_id)'
-        cursor = db.execute(query,{'user_id' : session['id'],'article_id': article_id})
-    return render_template('article.html',article = cursor)
+        name = request.form.get('name')
+        price = float(request.form.get('price'))
+        hours_per_unit = float(request.form.get('time'))
+        unit = request.form.get('unit')
+
+        if not name:
+            flash("Please enter article name")
+
+        else:
+            db = get_db()
+            if not price or price < 0:
+                price = 0
+            if not hours_per_unit or hours_per_unit < 0:
+                hours_per_unit = 0
+            if not unit:
+                unit = ''
+
+            query = '''UPDATE articles
+                       SET name=:name, price=:price,hours_per_unit=:hours_per_unit, unit=:unit
+                       WHERE user_id = :user_id AND id = :article_id
+                    '''
+            db.execute(query,{'user_id':session["id"],'name':name,'price':price,'hours_per_unit':hours_per_unit,'article_id': article_id, 'unit':unit})
+            db.commit()
+            return redirect(url_for('articles'))
+        
+    
+    query = 'SELECT id, name, price, hours_per_unit, unit FROM articles WHERE (user_id = :user_id AND id = :article_id)'
+    rows = db.execute(query,{'user_id' : session['id'],'article_id': article_id})        
+    article = rows.fetchone()
+
+    return render_template('article.html', article = article)
 
 @app.route('/add_article', methods=["GET","POST"])
 @require_login
 def add_article():
+
     if request.method == 'POST':
         name = request.form.get('name')
-        price = request.form.get('price')
-        hours_per_unit = request.form.get('time')
+        price = float(request.form.get('price'))
+        hours_per_unit = float(request.form.get('time'))
+        unit = request.form.get('unit')
+
         if not name:
             flash("Please enter article name")
+
         else:
             db = get_db()
-            if not price:
+            if not price or price > 0:
                 price = 0
-            if not hours_per_unit:
+            if not hours_per_unit or hours_per_unit > 0:
                 hours_per_unit = 0
-            query = '''INSERT INTO articles (user_id,name,price,hours_per_unit) 
-                       VALUES (:user_id,:name,:price,:hours_per_unit)
+            query = '''INSERT INTO articles (user_id,name,price,hours_per_unit,unit) 
+                       VALUES (:user_id,:name,:price,:hours_per_unit,:unit)
                     '''
-            db.execute(query,{'user_id':session["id"],'name':name,'price':price,'hours_per_unit':hours_per_unit})
+            db.execute(query,{'user_id':session["id"],'name':name,'price':price,'hours_per_unit':hours_per_unit,'unit':unit})
             db.commit()
             return redirect(url_for('articles'))
     
