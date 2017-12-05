@@ -1,4 +1,4 @@
-/*$(function()
+$(function()
 {
 
   $("#searchbar").keyup(function() 
@@ -7,7 +7,7 @@
     var filter;
     filter = $(this).val().toUpperCase();
 
-    $(".article_post").each(function(i, obj) 
+    $(".project_post").each(function(i, obj) 
     {
   
       if ($("a",this).text().toUpperCase().indexOf(filter) > -1 )
@@ -19,4 +19,3 @@
     });
   });
 });
-*/

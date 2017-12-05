@@ -2,8 +2,8 @@
 {% block title %}Dashboard{% endblock %} 
 {% block content %}
 <script type="text/javascript" src="{{ url_for('static', filename='dashboard.js')}}"></script>
-<input type="text" id="searchbar" placeholder="Article...">
-<button ></button>
+<input type="text" id="searchbar" placeholder="Project...">
+<a href={{ url_for('add_project') }}>Add Project</a>
 <ul id="list_of_projects">
 
     {% for project in projects %}
