@@ -11,7 +11,6 @@
   	<div id="navbar"> 
   		<ul>
   			<li><a href={{ url_for('index') }}>HOME</a></li>
-        <li><a href={{ url_for('projects') }}>PROJECTS</a></li>
         <li><a href={{ url_for('articles') }}>ARTICLES</a></li>
         {% if session['id']%}
           <li class="right"><a href={{ url_for('logout') }}>LOGOUT</a></li>

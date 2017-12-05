@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+{% block title %}Dashboard{% endblock %} 
+{% block content %}
+<script type="text/javascript" src="{{ url_for('static', filename='dashboard.js')}}"></script>
+<input type="text" id="searchbar" placeholder="Article...">
+<button ></button>
+<ul id="list_of_projects">
+
+    {% for project in projects %}
+        <li class="project_post"><a href={{ url_for('project', project_id = project[1])}}>{{project[0]}}</a></li>
+    {% endfor %}
+   
+</ul>
+
+
+
+
+
+{% endblock %}

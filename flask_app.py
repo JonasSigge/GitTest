@@ -48,7 +48,16 @@ def close_db(error):
 @app.route('/')
 @require_login
 def index():
-    return render_template("index.html")
+    db = get_db();
+    if request.method == 'POST':
+        if request.form['add']:
+            return redirect(url_for('add_article'))
+    else:
+        query = ''' SELECT name,id from projects where 
+                    user_id = :user_id LIMIT 50
+                '''
+        rows = db.execute(query, {'user_id' : session['id']})
+    return render_template('dashboard.html', projects = rows)
 
 @app.route('/register', methods=["GET", "POST"])
 def register():
@@ -155,11 +164,6 @@ def logout():
     session.clear()
     #sends user to login page
     return redirect(url_for('login'))
-
-@app.route('/projects')
-def projects():
-    #TODO
-    return redirect(url_for('index'))
 
 @app.route('/articles', methods=["GET","POST"])
 @require_login
