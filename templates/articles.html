@@ -2,12 +2,12 @@
 {% block title %}Articles{% endblock %} 
 {% block content %}
 <script type="text/javascript" src="{{ url_for('static', filename='articles.js')}}"></script>
-<a href={{ url_for('add_article') }}>Add article</a>
+<a href={{ url_for('add_article', project_id = project_id) }}>Add article</a>
 <input type="text" id="searchbar" placeholder="Article...">
 <ul id="list_of_articles">
 
     {% for article in articles %}
-        <li class="article_post"><a href={{ url_for('article', article_id = article[1])}}>{{article[0]}}</a></li>
+        <li class="article_post"><a href={{ url_for('article', project_id = project_id, article_id = article[1] )}}>{{article[0]}}</a></li>
     {% endfor %}
    
 </ul>

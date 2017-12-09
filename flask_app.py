@@ -161,9 +161,9 @@ def logout():
     #sends user to login page
     return redirect(url_for('login'))
 
-@app.route('/articles', methods=["GET","POST"])
+@app.route('/articles/<project_id>', methods=["GET","POST"])
 @require_login
-def articles():
+def articles(project_id):
     db = get_db();
     if request.method == 'POST':
         if request.form['add']:
@@ -173,13 +173,12 @@ def articles():
                     user_id = :user_id LIMIT 50
                 '''
         rows = db.execute(query, {'user_id' : session['id']})
-    return render_template('articles.html', articles = rows)
+    return render_template('articles.html', articles = rows, project_id = project_id)
 
-@app.route('/article<article_id>', methods=["GET","POST"])
+@app.route('/article/<project_id>/<article_id>', methods=["GET","POST"])
 @require_login
-def article(article_id):
+def article(project_id,article_id):
     db = get_db()
-
     if request.method == 'POST':
         name = request.form.get('name')
         price = float(request.form.get('price'))
@@ -204,18 +203,18 @@ def article(article_id):
                     '''
             db.execute(query,{'user_id':session["id"],'name':name,'price':price,'hours_per_unit':hours_per_unit,'article_id': article_id, 'unit':unit})
             db.commit()
-            return redirect(url_for('articles'))
+            return redirect(url_for('articles', project_id = project_id))
         
     
     query = 'SELECT id, name, price, hours_per_unit, unit FROM articles WHERE (user_id = :user_id AND id = :article_id)'
     rows = db.execute(query,{'user_id' : session['id'],'article_id': article_id})        
     article = rows.fetchone()
 
-    return render_template('article.html', article = article)
+    return render_template('article.html', article = article, project_id = project_id)
 
-@app.route('/add_article', methods=["GET","POST"])
+@app.route('/add_article/<project_id>', methods=["GET","POST"])
 @require_login
-def add_article():
+def add_article(project_id):
 
     if request.method == 'POST':
         name = request.form.get('name')
@@ -237,9 +236,9 @@ def add_article():
                     '''
             db.execute(query,{'user_id':session["id"],'name':name,'price':price,'hours_per_unit':hours_per_unit,'unit':unit})
             db.commit()
-            return redirect(url_for('articles'))
+            return redirect(url_for('articles',project_id = project_id))
     
-    return render_template('add_article.html')
+    return render_template('add_article.html',project_id = project_id)
 
 @app.route('/add_project', methods=["GET","POST"])
 @require_login
@@ -268,35 +267,30 @@ def project(project_id):
 
     if request.method == 'POST':
         name = request.form.get('name')
-        price = float(request.form.get('price'))
-        hours_per_unit = float(request.form.get('time'))
-        unit = request.form.get('unit')
-
         if not name:
             flash("Please enter article name")
-
         else:
             db = get_db()
-            if not price or price < 0:
-                price = 0
-            if not hours_per_unit or hours_per_unit < 0:
-                hours_per_unit = 0
-            if not unit:
-                unit = ''
+        #check if article is already in project
+            query = '''
 
-            query = '''UPDATE articles
+                    '''
+
+
+
+            query = '''UPDATE Projects_articles
                        SET name=:name, price=:price,hours_per_unit=:hours_per_unit, unit=:unit
                        WHERE user_id = :user_id AND id = :article_id
                     '''
             db.execute(query,{'user_id':session["id"],'name':name,'price':price,'hours_per_unit':hours_per_unit,'article_id': article_id, 'unit':unit})
             db.commit()
-            return redirect(url_for('articles'))
+            return redirect(url_for('index'))
         
     #Gets the articles and respective quantity related to this project
     query = 'SELECT article_id,quantity FROM Projects_articles WHERE (user_id = :user_id AND project_id = :project_id)'
-    articles = db.execute(query,{'user_id' : session['id'],'article_id': article_id})
+    articles = db.execute(query,{'user_id' : session['id'],'project_id': project_id})
     # NEXT STEP join query above -> [article_id] -> to query "where id == [article_id1,article_id2]"
     #query = 'SELECT id, name, price, hours_per_unit, unit FROM articles WHERE (user_id = :user_id AND id = :article_id)'
     #articles = db.execute(query,{'user_id' : session['id'],'article_id': article_id})
 
-    return render_template('project.html', articles = articles)
+    return render_template('project.html', articles = articles,project_id = project_id)

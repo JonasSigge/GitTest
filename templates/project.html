@@ -1,0 +1,10 @@
+{% extends "layout.html" %}
+{% block title %}Articles{% endblock %} 
+{% block content %}
+
+	<a href={{ url_for('articles', project_id = 3 )}}>NEW ARTICLE</a>
+    {% for article in articles %}
+        {{article}}
+    {% endfor %}
+
+{% endblock %}

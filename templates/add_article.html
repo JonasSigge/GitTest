@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block title %}Articles{% endblock %} 
 {% block content %}
-<form action="{{ url_for('add_article') }}" method="post">
+<form action="{{ url_for('add_article', project_id = project_id) }}" method="post">
 		<input placeholder='name' name='name' type=text>
 		<input placeholder='price' name='price' type=number>
 		<input placeholder='hours per unit' name='time' type=number>

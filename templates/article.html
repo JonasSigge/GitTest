@@ -3,7 +3,7 @@
 {% block content %}
 
     {% if article %}
-        <form action={{url_for('article', article_id=article[0])}} method="post">
+        <form action={{url_for('article', article_id=article[0], project_id = project_id)}} method="post">
 			<input value={{article[1]}} name='name' type=text>
 			<input value={{article[2]}} name='price' type=number>
 			<input value={{article[3]}} name='time' type=number>
