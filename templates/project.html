@@ -4,7 +4,9 @@
 
 	<a href={{ url_for('articles', project_id = 3 )}}>NEW ARTICLE</a>
     {% for article in articles %}
-        {{article}}
+        <li class="article_post">
+        	{{article}}
+        </li>
     {% endfor %}
 
 {% endblock %}

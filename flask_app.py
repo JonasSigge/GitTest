@@ -8,6 +8,22 @@ from helpers import *
 
 app = Flask(__name__)
 
+
+def log_and_execute(cursor, sql, *args):
+    s = sql
+    if len(args) > 0:
+        # generates SELECT quote(?), quote(?), ...
+        cursor.execute("SELECT " + ", ".join(["quote(?)" for i in args]), args)
+        quoted_values = cursor.fetchone()
+        for quoted_value in quoted_values:
+            s = s.replace('?', str(quoted_value), 1)
+    print ("SQL command: " + s)
+    cursor.execute(sql, args)
+
+
+
+
+
 # Load default config
 app.config.update(dict(
     DATABASE=os.path.join(app.root_path, 'QPA.db'),
@@ -166,7 +182,7 @@ def logout():
 def articles(project_id):
     db = get_db();
     if request.method == 'POST':
-        if request.form['add']:
+        if  request.form['add']:
             return redirect(url_for('add_article'))
     else:
         query = ''' SELECT name,id from articles where 
@@ -270,14 +286,10 @@ def project(project_id):
         if not name:
             flash("Please enter article name")
         else:
-            db = get_db()
         #check if article is already in project
             query = '''
 
                     '''
-
-
-
             query = '''UPDATE Projects_articles
                        SET name=:name, price=:price,hours_per_unit=:hours_per_unit, unit=:unit
                        WHERE user_id = :user_id AND id = :article_id
@@ -288,9 +300,59 @@ def project(project_id):
         
     #Gets the articles and respective quantity related to this project
     query = 'SELECT article_id,quantity FROM Projects_articles WHERE (user_id = :user_id AND project_id = :project_id)'
-    articles = db.execute(query,{'user_id' : session['id'],'project_id': project_id})
-    # NEXT STEP join query above -> [article_id] -> to query "where id == [article_id1,article_id2]"
-    #query = 'SELECT id, name, price, hours_per_unit, unit FROM articles WHERE (user_id = :user_id AND id = :article_id)'
-    #articles = db.execute(query,{'user_id' : session['id'],'article_id': article_id})
+    project_articles = db.execute(query,{'user_id' : session['id'],'project_id': project_id})
+    #selected_articles = '","'.join([str(article[0]) for article in project_articles])
+
+    selected_articles = [str(article[0]) for article in project_articles]
+    #print(selected_articles)
+    selected_articles = ','.join("'{0}'".format(x) for x in selected_articles)
+
+    query = 'SELECT * FROM articles WHERE (user_id = :user_id) AND (id IN (:article_id))'
+    articles = db.execute(query,{'user_id' : session['id'],'article_id': selected_articles})
+
+    #query = 'SELECT * FROM articles WHERE (user_id = ?) AND (id IN (?))'
+    #articles = db.execute(query,[session['id'],selected_articles])
+    #log_and_execute(articles,query,session['id'],selected_articles)
+
+    #print('SELECT * FROM articles WHERE (user_id = :user_id AND id IN (:article_id))')
+
 
     return render_template('project.html', articles = articles,project_id = project_id)
+
+@app.route('/add_article_to_project/<project_id>/<article_id>', methods=["GET"])
+@require_login
+def add_article_to_project(project_id, article_id):
+
+    db = get_db()
+
+    #get project data
+    query = 'SELECT * FROM projects WHERE id=:project_id AND user_id =:user_id'
+    project = db.execute(query, {'project_id':project_id, 'user_id':session['id']}).fetchone()
+
+    #get article data
+    query = 'SELECT * FROM articles WHERE id=:article_id AND user_id =:user_id'
+    article = db.execute(query, {'article_id':article_id, 'user_id':session['id']}).fetchone()
+
+    #Checks that project and article info is OK
+    if project and article:
+        #check that article doesnt already exists in project
+        query = 'SELECT id FROM Projects_articles WHERE article_id=:article_id AND project_id=:project_id AND user_id=:user_id'
+        article_already_exists_in_project = db.execute(query,{'project_id':project_id,'article_id':article_id,'user_id':session['id']}).fetchone()
+
+        if article_already_exists_in_project:
+            flash('Article already exists')
+            return(redirect(url_for('articles',project_id = project_id)))
+        else:
+            query = '''INSERT INTO Projects_articles (user_id,project_id,article_id,quantity) 
+                       VALUES (:user_id,:project_id,:article_id,:quantity)
+                    '''
+            db.execute(query,{'user_id':session['id'],'project_id':project_id,'article_id':article_id,'quantity':int(1)})
+            db.commit()
+        return redirect(url_for('project',project_id = project_id))
+    #insert new article into project
+
+        #send user to project page
+    return redirect(url_for('index'))
+
+
+
