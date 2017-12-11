@@ -301,23 +301,32 @@ def project(project_id):
     #Gets the articles and respective quantity related to this project
     query = 'SELECT article_id,quantity FROM Projects_articles WHERE (user_id = :user_id AND project_id = :project_id)'
     project_articles = db.execute(query,{'user_id' : session['id'],'project_id': project_id})
-    #selected_articles = '","'.join([str(article[0]) for article in project_articles])
+    selected_articles = [article[0] for article in project_articles]
+    #Create a dynamic length of 
+    article_parameters = []
+    for article in selected_articles:
+        article_parameters.append('?')
+    article_parameters=','.join(article_parameters)
 
-    selected_articles = [str(article[0]) for article in project_articles]
-    #print(selected_articles)
-    selected_articles = ','.join("'{0}'".format(x) for x in selected_articles)
+    query = 'SELECT * FROM articles WHERE (user_id =?) AND id IN ({0})'.format(article_parameters)
+    article_info = db.execute(query,[session['id'],*tuple(selected_articles)]).fetchall()
 
-    query = 'SELECT * FROM articles WHERE (user_id = :user_id) AND (id IN (:article_id))'
-    articles = db.execute(query,{'user_id' : session['id'],'article_id': selected_articles})
+    #Fuse quantity with article info
+    try:
+        for i in range (len(article_info)):
+            for project_article in project_articles:
 
-    #query = 'SELECT * FROM articles WHERE (user_id = ?) AND (id IN (?))'
-    #articles = db.execute(query,[session['id'],selected_articles])
-    #log_and_execute(articles,query,session['id'],selected_articles)
+                if article_info[i][0] == project_article[2]:
+                    print('article_info number ' + str(i) + 'and project_article id:' + str (project_article[0]))   
+                    article_info[i].append(project_article[3])
+                    break
 
-    #print('SELECT * FROM articles WHERE (user_id = :user_id AND id IN (:article_id))')
+                raise ValueError('no matching article_id for' + article_info[i])
 
+    except ValueError:
+        print(ValueError.args)
 
-    return render_template('project.html', articles = articles,project_id = project_id)
+    return render_template('project.html', articles = article_info,project_id = project_id)
 
 @app.route('/add_article_to_project/<project_id>/<article_id>', methods=["GET"])
 @require_login
